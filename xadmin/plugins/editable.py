@@ -71,7 +71,7 @@ class EditPatchView(ModelFormAdminView, ListAdminView):
 
         if self.org_obj is None:
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') %
-                          {'name': force_unicode(self.opts.verbose_name), 'key': escape(object_id)})
+                          {'name': self.opts.verbose_name, 'key': escape(object_id)})
 
     def get_new_field_html(self, f):
         result = self.result_item(self.org_obj, f, {'is_display_first':
@@ -123,7 +123,7 @@ class EditPatchView(ModelFormAdminView, ListAdminView):
         s = '{% load i18n crispy_forms_tags %}<form method="post" action="{{action_url}}">{% crispy form %}' + \
             '<button type="submit" class="btn btn-success btn-block btn-sm">{% trans "Apply" %}</button></form>'
         t = template.Template(s)
-        c = template.Context({'form': form, 'action_url': self.model_admin_url('patch', self.org_obj.pk)})
+        c = {'form': form, 'action_url': self.model_admin_url('patch', self.org_obj.pk)}
 
         return HttpResponse(t.render(c))
 

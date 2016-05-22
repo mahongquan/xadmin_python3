@@ -4,16 +4,10 @@ from django import forms
 from django.db import models
 from django.template import loader
 import collections
-try:
-    from formtools.wizard.storage import get_storage
-    from formtools.wizard.forms import ManagementForm
-    from formtools.wizard.views import StepsHelper
-except:
-    ##work for django<1.8
-    #from django.contrib.formtools.wizard.storage import get_storage
-    #from django.contrib.formtools.wizard.forms import ManagementForm
-    #from django.contrib.formtools.wizard.views import StepsHelper
-    pass
+from formtools.wizard.storage import get_storage
+from formtools.wizard.forms import ManagementForm
+from formtools.wizard.views import StepsHelper
+
 
 from django.utils.module_loading import import_string
 from django.forms import ValidationError
@@ -21,7 +15,7 @@ from django.forms.models import modelform_factory
 
 from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ModelFormAdminView
-
+import logging
 
 def normalize_name(name):
     new = re.sub('(((?<=[a-z])[A-Z])|([A-Z](?![A-Z]|$)))', '_\\1', name)
@@ -229,7 +223,8 @@ class WizardFormPlugin(BaseAdminPlugin):
             return __()
 
         # change the stored current step
-        self.storage.current_step = self.steps.__next__
+        logging.info(dir(self.steps))
+        self.storage.current_step = self.steps.next
 
         self.admin_view.form_obj = self.get_step_form_obj()
         self.admin_view.setup_forms()

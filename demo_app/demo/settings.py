@@ -141,12 +141,11 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admin',
-
     'xadmin',
     'crispy_forms',
     'reversion',
-
     'app',
+    'myapp',
 )
 
 DATE_FORMAT = 'Y-m-d'

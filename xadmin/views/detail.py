@@ -106,7 +106,7 @@ class ResultField(object):
     def val(self):
         text = mark_safe(
             self.text) if self.allow_tags else conditional_escape(self.text)
-        if force_unicode(text) == '' or text == 'None' or text == EMPTY_CHANGELIST_VALUE:
+        if text == '' or text == 'None' or text == EMPTY_CHANGELIST_VALUE:
             text = mark_safe(
                 '<span class="text-muted">%s</span>' % EMPTY_CHANGELIST_VALUE)
         for wrap in self.wraps:
@@ -142,7 +142,7 @@ class DetailAdminView(ModelAdminView):
         if self.obj is None:
             raise Http404(
                 _('%(name)s object with primary key %(key)r does not exist.') %
-                {'name': force_unicode(self.opts.verbose_name), 'key': escape(object_id)})
+                {'name': self.opts.verbose_name, 'key': escape(object_id)})
         self.org_obj = self.obj
 
     @filter_hook
@@ -230,7 +230,7 @@ class DetailAdminView(ModelAdminView):
     @filter_hook
     def get_context(self):
         new_context = {
-            'title': _('%s Detail') % force_unicode(self.opts.verbose_name),
+            'title': _('%s Detail') % self.opts.verbose_name,
             'form': self.form_obj,
 
             'object': self.obj,
@@ -248,7 +248,7 @@ class DetailAdminView(ModelAdminView):
     @filter_hook
     def get_breadcrumb(self):
         bcs = super(DetailAdminView, self).get_breadcrumb()
-        item = {'title': force_unicode(self.obj)}
+        item = {'title': str(self.obj)}
         if self.has_view_permission():
             item['url'] = self.model_admin_url('detail', self.obj.pk)
         bcs.append(item)

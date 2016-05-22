@@ -122,7 +122,7 @@ class ChartsView(ListAdminView):
         self.y_fields = (
             y_fields,) if type(y_fields) not in (list, tuple) else y_fields
 
-        datas = [{"data":[], "label": force_unicode(label_for_field(
+        datas = [{"data":[], "label": (label_for_field(
             i, self.model, model_admin=self))} for i in self.y_fields]
 
         self.make_result_list()

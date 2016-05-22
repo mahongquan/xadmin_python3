@@ -39,7 +39,7 @@ class WidgetTypeSelect(forms.Widget):
         final_attrs = self.build_attrs(attrs, name=name)
         final_attrs['class'] = 'nav nav-pills nav-stacked'
         output = ['<ul%s>' % flatatt(final_attrs)]
-        options = self.render_options((value), final_attrs['id'])#force_unicode(value), final_attrs['id'])
+        options = self.render_options(value, final_attrs['id'])#force_unicode(value), final_attrs['id'])
         if options:
             output.append(options)
         output.append('</ul>')
@@ -634,7 +634,7 @@ class ModelDashboard(Dashboard, ModelAdminView):
 
     @filter_hook
     def get_title(self):
-        return self.title % force_unicode(self.obj)
+        return self.title % str(self.obj)
 
     def init_request(self, object_id, *args, **kwargs):
         self.obj = self.get_object(unquote(object_id))
@@ -644,7 +644,7 @@ class ModelDashboard(Dashboard, ModelAdminView):
 
         if self.obj is None:
             raise Http404(_('%(name)s object with primary key %(key)r does not exist.') %
-                          {'name': force_unicode(self.opts.verbose_name), 'key': escape(object_id)})
+                          {'name': self.opts.verbose_name, 'key': escape(object_id)})
 
     @filter_hook
     def get_context(self):

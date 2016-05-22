@@ -1,5 +1,5 @@
 #coding:utf-8
-import urllib.request, urllib.parse, urllib.error#, httplib2
+import urllib.request, urllib.parse, urllib.error, httplib2
 from django.template import loader
 from django.core.cache import cache
 from django.utils.translation import ugettext as _
@@ -63,7 +63,7 @@ class ThemePlugin(BaseAdminPlugin):
                     h = httplib2.Http()
                     resp, content = h.request("http://bootswatch.com/api/3.json", 'GET', \
                         "", headers={"Accept": "application/json", "User-Agent": self.request.META['HTTP_USER_AGENT']})
-                    watch_themes = json.loads(content)['themes']
+                    watch_themes = json.loads(content.decode())['themes']
                     ex_themes.extend([
                         {'name': t['name'], 'description': t['description'],
                             'css': t['cssMin'], 'thumbnail': t['thumbnail']}

@@ -127,9 +127,9 @@ class BatchChangeAction(BaseActionView):
         self.form_obj.helper = helper
         count = len(queryset)
         if count == 1:
-            objects_name = force_unicode(self.opts.verbose_name)
+            objects_name =self.opts.verbose_name
         else:
-            objects_name = force_unicode(self.opts.verbose_name_plural)
+            objects_name = self.opts.verbose_name_plural
 
         context = self.get_context()
         context.update({

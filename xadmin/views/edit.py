@@ -401,8 +401,8 @@ class CreateAdminView(ModelFormAdminView):
         request = self.request
 
         msg = _(
-            'The %(name)s "%(obj)s" was added successfully.') % {'name': force_unicode(self.opts.verbose_name),
-                                                                 'obj': "<a class='alert-link' href='%s'>%s</a>" % (self.model_admin_url('change', self.new_obj._get_pk_val()), force_unicode(self.new_obj))}
+            'The %(name)s "%(obj)s" was added successfully.') % {'name': (self.opts.verbose_name),
+                                                                 'obj': "<a class='alert-link' href='%s'>%s</a>" % (self.model_admin_url('change', self.new_obj._get_pk_val()), (self.new_obj))}
 
         if "_continue" in request.POST:
             self.message_user(
@@ -410,7 +410,7 @@ class CreateAdminView(ModelFormAdminView):
             return self.model_admin_url('change', self.new_obj._get_pk_val())
 
         if "_addanother" in request.POST:
-            self.message_user(msg + ' ' + (_("You may add another %s below.") % force_unicode(self.opts.verbose_name)), 'success')
+            self.message_user(msg + ' ' + (_("You may add another %s below.") % (self.opts.verbose_name)), 'success')
             return request.path
         else:
             self.message_user(msg, 'success')
@@ -452,7 +452,7 @@ class UpdateAdminView(ModelFormAdminView):
     @filter_hook
     def get_context(self):
         new_context = {
-            'title': _('Change %s') % force_unicode(self.org_obj),
+            'title': _('Change %s') % self.org_obj,#force_unicode(self.org_obj),
             'object_id': str(self.org_obj.pk),
         }
         context = super(UpdateAdminView, self).get_context()
@@ -463,7 +463,7 @@ class UpdateAdminView(ModelFormAdminView):
     def get_breadcrumb(self):
         bcs = super(ModelFormAdminView, self).get_breadcrumb()
 
-        item = {'title': force_unicode(self.org_obj)}
+        item = {'title': self.org_obj}#force_unicode(self.org_obj)}
         if self.has_change_permission():
             item['url'] = self.model_admin_url('change', self.org_obj.pk)
         bcs.append(item)
@@ -498,14 +498,14 @@ class UpdateAdminView(ModelFormAdminView):
         pk_value = obj._get_pk_val()
 
         msg = _('The %(name)s "%(obj)s" was changed successfully.') % {'name':
-                                                                       force_unicode(verbose_name), 'obj': force_unicode(obj)}
+                                                                      verbose_name, 'obj': str(obj)}
         if "_continue" in request.POST:
             self.message_user(
                 msg + ' ' + _("You may edit it again below."), 'success')
             return request.path
         elif "_addanother" in request.POST:
             self.message_user(msg + ' ' + (_("You may add another %s below.")
-                              % force_unicode(verbose_name)), 'success')
+                              %  verbose_name), 'success')
             return self.model_admin_url('add')
         else:
             self.message_user(msg, 'success')

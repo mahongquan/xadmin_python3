@@ -40,14 +40,14 @@ class SelectMultipleTransfer(forms.SelectMultiple):
             value = []
         final_attrs = self.build_attrs(attrs, name=name)
 
-        selected_choices = set(force_unicode(v) for v in value)
+        selected_choices = set(v for v in value)
         available_output = []
         chosen_output = []
 
         for option_value, option_label in chain(self.choices, choices):
             if isinstance(option_label, (list, tuple)):
                 available_output.append('<optgroup label="%s">' %
-                                        escape(force_unicode(option_value)))
+                                        escape(option_value))
                 for option in option_label:
                     output, selected = self.render_opt(
                         selected_choices, *option)
