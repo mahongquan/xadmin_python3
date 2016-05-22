@@ -95,13 +95,13 @@ class TableInlineStyle(InlineStyle):
 
     def update_layout(self, helper):
         helper.add_layout(
-            Layout(*[TDField(f) for f in self.formset[0].fields.keys()]))
+            Layout(*[TDField(f) for f in list(self.formset[0].fields.keys())]))
 
     def get_attrs(self):
         fields = []
         readonly_fields = []
         if len(self.formset):
-            fields = [f for k, f in self.formset[0].fields.items() if k != DELETION_FIELD_NAME]
+            fields = [f for k, f in list(self.formset[0].fields.items()) if k != DELETION_FIELD_NAME]
             readonly_fields = [f for f in getattr(self.formset[0], 'readonly_fields', [])]
         return {
             'fields': fields,
@@ -115,7 +115,7 @@ def replace_field_to_value(layout, av):
         for i, lo in enumerate(layout.fields):
             if isinstance(lo, Field) or issubclass(lo.__class__, Field):
                 layout.fields[i] = ShowField(av, *lo.fields, **lo.attrs)
-            elif isinstance(lo, basestring):
+            elif isinstance(lo, str):
                 layout.fields[i] = ShowField(av, lo)
             elif hasattr(lo, 'get_field_names'):
                 replace_field_to_value(lo, av)
@@ -199,13 +199,13 @@ class InlineModelAdmin(ModelFormAdminView):
             layout = copy.deepcopy(self.form_layout)
 
             if layout is None:
-                layout = Layout(*instance[0].fields.keys())
+                layout = Layout(*list(instance[0].fields.keys()))
             elif type(layout) in (list, tuple) and len(layout) > 0:
                 layout = Layout(*layout)
 
                 rendered_fields = [i[1] for i in layout.get_field_names()]
-                layout.extend([f for f in instance[0]
-                              .fields.keys() if f not in rendered_fields])
+                layout.extend([f for f in list(instance[0]
+                              .fields.keys()) if f not in rendered_fields])
 
             helper.add_layout(layout)
             style.update_layout(helper)
@@ -227,7 +227,7 @@ class InlineModelAdmin(ModelFormAdminView):
                         label = None
                         if readonly_field in inst._meta.get_all_field_names():
                             label = inst._meta.get_field(readonly_field).verbose_name
-                            value = unicode(getattr(inst, readonly_field))
+                            value = str(getattr(inst, readonly_field))
                         elif inspect.ismethod(getattr(inst, readonly_field, None)):
                             value = getattr(inst, readonly_field)()
                             label = getattr(getattr(inst, readonly_field), 'short_description', readonly_field)
@@ -415,7 +415,7 @@ class InlineFormsetPlugin(BaseAdminPlugin):
         for fs in self.formsets:
             errors.extend(fs.non_form_errors())
             for errors_in_inline_form in fs.errors:
-                errors.extend(errors_in_inline_form.values())
+                errors.extend(list(errors_in_inline_form.values()))
         return errors
 
     def get_form_layout(self, layout):

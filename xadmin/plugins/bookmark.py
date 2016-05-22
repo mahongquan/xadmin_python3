@@ -41,12 +41,12 @@ class BookmarkPlugin(BaseAdminPlugin):
         bookmarks = []
 
         current_qs = '&'.join(['%s=%s' % (k, v) for k, v in sorted(
-            filter(lambda i: bool(i[1] and (i[0] in (COL_LIST_VAR, ORDER_VAR, SEARCH_VAR) or i[0].startswith(FILTER_PREFIX)
-                                            or i[0].startswith(RELATE_PREFIX))), self.request.GET.items()))])
+            [i for i in list(self.request.GET.items()) if bool(i[1] and (i[0] in (COL_LIST_VAR, ORDER_VAR, SEARCH_VAR) or i[0].startswith(FILTER_PREFIX)
+                                            or i[0].startswith(RELATE_PREFIX)))])])
 
         model_info = (self.opts.app_label, self.opts.model_name)
         has_selected = False
-        menu_title = _(u"Bookmark")
+        menu_title = _("Bookmark")
         list_base_url = reverse('xadmin:%s_%s_changelist' %
                                 model_info, current_app=self.admin_site.name)
 
@@ -54,7 +54,7 @@ class BookmarkPlugin(BaseAdminPlugin):
         for bk in self.list_bookmarks:
             title = bk['title']
             params = dict(
-                [(FILTER_PREFIX + k, v) for (k, v) in bk['query'].items()])
+                [(FILTER_PREFIX + k, v) for (k, v) in list(bk['query'].items())])
             if 'order' in bk:
                 params[ORDER_VAR] = '.'.join(bk['order'])
             if 'cols' in bk:
@@ -63,7 +63,7 @@ class BookmarkPlugin(BaseAdminPlugin):
                 params[SEARCH_VAR] = bk['search']
             def check_item(i):
                 return bool(i[1]) or i[1] == False
-            bk_qs = '&'.join(['%s=%s' % (k, v) for k, v in sorted(filter(check_item, params.items()))])
+            bk_qs = '&'.join(['%s=%s' % (k, v) for k, v in sorted(filter(check_item, list(params.items())))])
 
             url = list_base_url + '?' + bk_qs
             selected = (current_qs == bk_qs)
@@ -186,9 +186,9 @@ class BookmarkWidget(PartialBaseWidget):
         self.bookmark = bookmark
 
         if not self.title:
-            self.title = unicode(bookmark)
+            self.title = str(bookmark)
 
-        req = self.make_get_request("", data.items())
+        req = self.make_get_request("", list(data.items()))
         self.list_view = self.get_view_class(
             ListAdminView, model, list_per_page=10, list_editable=[])(req)
 
@@ -206,7 +206,7 @@ class BookmarkWidget(PartialBaseWidget):
         context['result_headers'] = [c for c in list_view.result_headers(
         ).cells if c.field_name in base_fields]
         context['results'] = [[o for i, o in
-                               enumerate(filter(lambda c:c.field_name in base_fields, r.cells))]
+                               enumerate([c for c in r.cells if c.field_name in base_fields])]
                               for r in list_view.results()]
         context['result_count'] = list_view.result_count
         context['page_url'] = self.bookmark.url

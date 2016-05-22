@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from django.forms.utils import ErrorDict
 from django.utils.html import escape
-from django.utils.encoding import force_unicode
+#from django.utils.encoding import force_unicode
 from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ListAdminView, ModelFormAdminView, DetailAdminView
 
@@ -31,7 +31,7 @@ class AjaxListPlugin(BaseAjaxPlugin):
         ).cells if c.field_name in base_fields])
 
         objects = [dict([(o.field_name, escape(str(o.value))) for i, o in
-                         enumerate(filter(lambda c:c.field_name in base_fields, r.cells))])
+                         enumerate([c for c in r.cells if c.field_name in base_fields])])
                    for r in av.results()]
 
         return self.render_response({'headers': headers, 'objects': objects, 'total_count': av.result_count, 'has_more': av.has_more})
@@ -45,8 +45,8 @@ class JsonErrorDict(ErrorDict):
 
     def as_json(self):
         if not self:
-            return u''
-        return [{'id': self.form[k].auto_id if k != NON_FIELD_ERRORS else NON_FIELD_ERRORS, 'name': k, 'errors': v} for k, v in self.items()]
+            return ''
+        return [{'id': self.form[k].auto_id if k != NON_FIELD_ERRORS else NON_FIELD_ERRORS, 'name': k, 'errors': v} for k, v in list(self.items())]
 
 
 class AjaxFormPlugin(BaseAjaxPlugin):

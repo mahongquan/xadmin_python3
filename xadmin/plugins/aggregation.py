@@ -46,7 +46,7 @@ class AggregationPlugin(BaseAdminPlugin):
     def _get_aggregate_row(self):
         queryset = self.admin_view.list_queryset._clone()
         obj = queryset.aggregate(*[AGGREGATE_METHODS[method](field_name) for field_name, method in
-                                   self.aggregate_fields.items() if method in AGGREGATE_METHODS])
+                                   list(self.aggregate_fields.items()) if method in AGGREGATE_METHODS])
 
         row = ResultRow()
         row['is_display_first'] = False

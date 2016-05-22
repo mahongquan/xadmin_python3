@@ -49,7 +49,7 @@ class AdminImageWidget(forms.FileInput):
             output.append('<a href="%s" target="_blank" title="%s" data-gallery="gallery"><img src="%s" class="field_img"/></a><br/>%s ' %
                          (value.url, label, value.url, _('Change:')))
         output.append(super(AdminImageWidget, self).render(name, value, attrs))
-        return mark_safe(u''.join(output))
+        return mark_safe(''.join(output))
 
 
 class ModelDetailPlugin(BaseAdminPlugin):

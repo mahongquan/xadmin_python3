@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from xadmin.filters import manager,MultiSelectFieldListFilter
 from xadmin.plugins.filters import *
 from xadmin.util import is_related_field
+import collections
 
 @manager.register
 class QuickFilterMultiSelectFieldListFilter(MultiSelectFieldListFilter):
@@ -39,7 +40,7 @@ class QuickFilterPlugin(BaseAdminPlugin):
         # ForeignKeyRawIdWidget, on the basis of ForeignKey.limit_choices_to,
         # are allowed to work.
         for l in model._meta.related_fkey_lookups:
-            for k, v in widgets.url_params_from_lookup_dict(l).items():
+            for k, v in list(widgets.url_params_from_lookup_dict(l).items()):
                 if k == lookup and v == value:
                     return True
  
@@ -79,8 +80,8 @@ class QuickFilterPlugin(BaseAdminPlugin):
         return clean_lookup in self.list_quick_filter
  
     def get_list_queryset(self, queryset):
-        lookup_params = dict([(smart_str(k)[len(FILTER_PREFIX):], v) for k, v in self.admin_view.params.items() if smart_str(k).startswith(FILTER_PREFIX) and v != ''])
-        for p_key, p_val in lookup_params.iteritems():
+        lookup_params = dict([(smart_str(k)[len(FILTER_PREFIX):], v) for k, v in list(self.admin_view.params.items()) if smart_str(k).startswith(FILTER_PREFIX) and v != ''])
+        for p_key, p_val in lookup_params.items():
             if p_val == "False":
                 lookup_params[p_key] = False
         use_distinct = False
@@ -90,11 +91,11 @@ class QuickFilterPlugin(BaseAdminPlugin):
  
         # for clean filters
         self.admin_view.quickfilter['has_query_param'] = bool(lookup_params)
-        self.admin_view.quickfilter['clean_query_url'] = self.admin_view.get_query_string(remove=[k for k in self.request.GET.keys() if k.startswith(FILTER_PREFIX)])
+        self.admin_view.quickfilter['clean_query_url'] = self.admin_view.get_query_string(remove=[k for k in list(self.request.GET.keys()) if k.startswith(FILTER_PREFIX)])
  
         # Normalize the types of keys
         if not self.free_query_filter:
-            for key, value in lookup_params.items():
+            for key, value in list(lookup_params.items()):
                 if not self.lookup_allowed(key, value):
                     raise SuspiciousOperation("Filtering by %s not allowed" % key)
  
@@ -114,7 +115,7 @@ class QuickFilterPlugin(BaseAdminPlugin):
                         field_order_by = list_quick_filter['order_by']
                     if 'limit' in list_quick_filter:
                         field_limit = list_quick_filter['limit']
-                    if 'sort' in list_quick_filter and callable(list_quick_filter['sort']):
+                    if 'sort' in list_quick_filter and isinstance(list_quick_filter['sort'], collections.Callable):
                         sort_key = list_quick_filter['sort']
                     if 'cache' in list_quick_filter and type(list_quick_filter)==dict:
                         cache_config = list_quick_filter['cache']
@@ -136,7 +137,7 @@ class QuickFilterPlugin(BaseAdminPlugin):
                 if spec and spec.has_output():
                     try:
                         new_qs = spec.do_filte(queryset)
-                    except ValidationError, e:
+                    except ValidationError as e:
                         new_qs = None
                         self.admin_view.message_user(_("<b>Filtering error:</b> %s") % e.messages[0], 'error')
                     if new_qs is not None:
@@ -146,7 +147,7 @@ class QuickFilterPlugin(BaseAdminPlugin):
  
         self.has_filters = bool(self.filter_specs)
         self.admin_view.quickfilter['filter_specs'] = self.filter_specs
-        self.admin_view.quickfilter['used_filter_num'] = len(filter(lambda f: f.is_used, self.filter_specs))
+        self.admin_view.quickfilter['used_filter_num'] = len([f for f in self.filter_specs if f.is_used])
  
         if use_distinct:
             return queryset.distinct()

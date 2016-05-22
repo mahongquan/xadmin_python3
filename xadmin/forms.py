@@ -29,7 +29,7 @@ class AdminAuthenticationForm(AuthenticationForm):
             self.user_cache = authenticate(
                 username=username, password=password)
             if self.user_cache is None:
-                if u'@' in username:
+                if '@' in username:
                     # Mistakenly entered e-mail address instead of username? Look it up.
                     try:
                         user = User.objects.get(email=username)

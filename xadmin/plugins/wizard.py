@@ -3,15 +3,17 @@ from collections import OrderedDict
 from django import forms
 from django.db import models
 from django.template import loader
+import collections
 try:
     from formtools.wizard.storage import get_storage
     from formtools.wizard.forms import ManagementForm
     from formtools.wizard.views import StepsHelper
 except:
     ##work for django<1.8
-    from django.contrib.formtools.wizard.storage import get_storage
-    from django.contrib.formtools.wizard.forms import ManagementForm
-    from django.contrib.formtools.wizard.views import StepsHelper
+    #from django.contrib.formtools.wizard.storage import get_storage
+    #from django.contrib.formtools.wizard.forms import ManagementForm
+    #from django.contrib.formtools.wizard.views import StepsHelper
+    pass
 
 from django.utils.module_loading import import_string
 from django.forms import ValidationError
@@ -41,7 +43,7 @@ class WizardFormPlugin(BaseAdminPlugin):
     def _get_form_prefix(self, step=None):
         if step is None:
             step = self.steps.current
-        return 'step_%d' % self.get_form_list().keys().index(step)
+        return 'step_%d' % list(self.get_form_list().keys()).index(step)
 
     def get_form_list(self):
         if not hasattr(self, '_form_list'):
@@ -51,7 +53,7 @@ class WizardFormPlugin(BaseAdminPlugin):
                 self.wizard_form_list) > 0, 'at least one form is needed'
 
             for i, form in enumerate(self.wizard_form_list):
-                init_form_list[unicode(form[0])] = form[1]
+                init_form_list[str(form[0])] = form[1]
 
             self._form_list = init_form_list
 
@@ -84,8 +86,8 @@ class WizardFormPlugin(BaseAdminPlugin):
             # form. (This makes stepping back a lot easier).
             wizard_goto_step = self.request.POST.get('wizard_goto_step', None)
             if wizard_goto_step and int(wizard_goto_step) < len(self.get_form_list()):
-                self.storage.current_step = self.get_form_list(
-                ).keys()[int(wizard_goto_step)]
+                self.storage.current_step = list(self.get_form_list(
+                ).keys())[int(wizard_goto_step)]
                 self.admin_view.model_form = self.get_step_form()
                 self.wizard_goto_step = True
                 return
@@ -128,7 +130,7 @@ class WizardFormPlugin(BaseAdminPlugin):
                                          fields=attrs['fields'], formfield_callback=self.admin_view.formfield_for_dbfield)
             if attrs.get('callback', None):
                 callback = attrs['callback']
-                if callable(callback):
+                if isinstance(callback, collections.Callable):
                     return callback(self)
                 elif hasattr(self.admin_view, str(callback)):
                     return getattr(self.admin_view, str(callback))(self)
@@ -227,7 +229,7 @@ class WizardFormPlugin(BaseAdminPlugin):
             return __()
 
         # change the stored current step
-        self.storage.current_step = self.steps.next
+        self.storage.current_step = self.steps.__next__
 
         self.admin_view.form_obj = self.get_step_form_obj()
         self.admin_view.setup_forms()
@@ -241,12 +243,12 @@ class WizardFormPlugin(BaseAdminPlugin):
         and contain a list of the formset cleaned_data dictionaries.
         """
         cleaned_data = {}
-        for form_key, attrs in self.get_form_list().items():
+        for form_key, attrs in list(self.get_form_list().items()):
             form_obj = self.get_step_form_obj(form_key)
             if form_obj.is_valid():
                 if type(attrs) is dict and 'convert' in attrs:
                     callback = attrs['convert']
-                    if callable(callback):
+                    if isinstance(callback, collections.Callable):
                         callback(self, cleaned_data, form_obj)
                     elif hasattr(self.admin_view, str(callback)):
                         getattr(self.admin_view,
@@ -280,9 +282,9 @@ class WizardFormPlugin(BaseAdminPlugin):
         if step is None:
             step = self.steps.current
         form_list = self.get_form_list()
-        key = form_list.keys().index(step) + 1
-        if len(form_list.keys()) > key:
-            return form_list.keys()[key]
+        key = list(form_list.keys()).index(step) + 1
+        if len(list(form_list.keys())) > key:
+            return list(form_list.keys())[key]
         return None
 
     def get_prev_step(self, step=None):
@@ -294,9 +296,9 @@ class WizardFormPlugin(BaseAdminPlugin):
         if step is None:
             step = self.steps.current
         form_list = self.get_form_list()
-        key = form_list.keys().index(step) - 1
+        key = list(form_list.keys()).index(step) - 1
         if key >= 0:
-            return form_list.keys()[key]
+            return list(form_list.keys())[key]
         return None
 
     def get_step_index(self, step=None):
@@ -306,7 +308,7 @@ class WizardFormPlugin(BaseAdminPlugin):
         """
         if step is None:
             step = self.steps.current
-        return self.get_form_list().keys().index(step)
+        return list(self.get_form_list().keys()).index(step)
 
     def block_before_fieldsets(self, context, nodes):
         context.update(dict(self.storage.extra_data))

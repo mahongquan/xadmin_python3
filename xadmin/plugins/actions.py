@@ -5,7 +5,7 @@ from django.db import router
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
 from django.template.response import TemplateResponse
-from django.utils.encoding import force_unicode
+#from django.utils.encoding import force_unicode
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _, ungettext
 from django.utils.text import capfirst
@@ -16,6 +16,7 @@ from xadmin.sites import site
 from xadmin.util import model_format_dict, model_ngettext
 from xadmin.views import BaseAdminPlugin, ListAdminView
 from xadmin.views.base import filter_hook, ModelAdminView
+import collections
 
 
 ACTION_CHECKBOX_NAME = '_selected_action'
@@ -23,7 +24,7 @@ checkbox = forms.CheckboxInput({'class': 'action-select'}, lambda value: False)
 
 
 def action_checkbox(obj):
-    return checkbox.render(ACTION_CHECKBOX_NAME, force_unicode(obj.pk))
+    return checkbox.render(ACTION_CHECKBOX_NAME, obj.pk)#force_unicode(obj.pk))
 action_checkbox.short_description = mark_safe(
     '<input type="checkbox" id="action-toggle" />')
 action_checkbox.allow_tags = True
@@ -53,7 +54,7 @@ class BaseActionView(ModelAdminView):
 class DeleteSelectedAction(BaseActionView):
 
     action_name = "delete_selected"
-    description = _(u'Delete selected %(verbose_name_plural)s')
+    description = _('Delete selected %(verbose_name_plural)s')
 
     delete_confirmation_template = None
     delete_selected_confirmation_template = None
@@ -223,7 +224,7 @@ class ActionPlugin(BaseAdminPlugin):
                 [self.get_action(action) for action in class_actions])
 
         # get_action might have returned None, so filter any of those out.
-        actions = filter(None, actions)
+        actions = [_f for _f in actions if _f]
 
         # Convert the actions into a OrderedDict keyed by name.
         actions = OrderedDict([
@@ -239,7 +240,7 @@ class ActionPlugin(BaseAdminPlugin):
         tuple (name, description).
         """
         choices = []
-        for ac, name, description, icon in self.actions.itervalues():
+        for ac, name, description, icon in self.actions.values():
             choice = (name, description % model_format_dict(self.opts), icon)
             choices.append(choice)
         return choices
@@ -250,7 +251,7 @@ class ActionPlugin(BaseAdminPlugin):
                 return None
             return action, getattr(action, 'action_name'), getattr(action, 'description'), getattr(action, 'icon')
 
-        elif callable(action):
+        elif isinstance(action, collections.Callable):
             func = action
             action = action.__name__
 
@@ -274,7 +275,7 @@ class ActionPlugin(BaseAdminPlugin):
         return item
 
     def result_item(self, item, obj, field_name, row):
-        if item.field is None and field_name == u'action_checkbox':
+        if item.field is None and field_name == 'action_checkbox':
             item.classes.append("action-checkbox")
         return item
 

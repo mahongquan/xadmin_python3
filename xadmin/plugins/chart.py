@@ -7,7 +7,7 @@ from django.template import loader
 from django.http import HttpResponseNotFound
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import HttpResponse
-from django.utils.encoding import smart_unicode
+#from django.utils.encoding import smart_unicode
 from django.db import models
 from django.utils.http import urlencode
 from django.utils.translation import ugettext_lazy as _, ugettext
@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _, ugettext
 from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ListAdminView
 from xadmin.views.dashboard import ModelBaseWidget, widget_manager
-from xadmin.util import lookup_field, label_for_field, force_unicode, json
+from xadmin.util import lookup_field, label_for_field, json#force_unicode, json
 
 
 @widget_manager.register
@@ -58,7 +58,7 @@ class ChartWidget(ModelBaseWidget):
 
     def context(self, context):
         context.update({
-            'charts': [{"name": name, "title": v['title'], 'url': self.get_chart_url(name, v)} for name, v in self.charts.items()],
+            'charts': [{"name": name, "title": v['title'], 'url': self.get_chart_url(name, v)} for name, v in list(self.charts.items())],
         })
 
     # Media
@@ -96,7 +96,7 @@ class ChartsPlugin(BaseAdminPlugin):
     # Block Views
     def block_results_top(self, context, nodes):
         context.update({
-            'charts': [{"name": name, "title": v['title'], 'url': self.get_chart_url(name, v)} for name, v in self.data_charts.items()],
+            'charts': [{"name": name, "title": v['title'], 'url': self.get_chart_url(name, v)} for name, v in list(self.data_charts.items())],
         })
         nodes.append(loader.render_to_string('xadmin/blocks/model_list.results_top.charts.html', context=context))
 

@@ -50,7 +50,7 @@ class ModelFormPlugin(BasePortalPlugin):
                 c.fields = [fs_map.pop(j) for j in layout_cs[i].split(
                     ',') if j in fs_map] if len(layout_cs) > i else []
             if fs_map and cs:
-                cs[0].fields.extend(fs_map.values())
+                cs[0].fields.extend(list(fs_map.values()))
         except Exception:
             pass
 

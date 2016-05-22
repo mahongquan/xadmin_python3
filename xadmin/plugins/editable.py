@@ -3,7 +3,7 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import models, transaction
 from django.forms.models import modelform_factory
 from django.http import Http404, HttpResponse
-from django.utils.encoding import force_unicode, smart_unicode
+#from django.utils.encoding import force_unicode, smart_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
@@ -43,7 +43,7 @@ class EditablePlugin(BaseAdminPlugin):
             item.btns.append((
                 '<a class="editable-handler" title="%s" data-editable-field="%s" data-editable-loadurl="%s">' +
                 '<i class="fa fa-edit"></i></a>') %
-                (_(u"Enter %s") % field_label, field_name, self.admin_view.model_admin_url('patch', pk) + '?fields=' + field_name))
+                (_("Enter %s") % field_label, field_name, self.admin_view.model_admin_url('patch', pk) + '?fields=' + field_name))
 
             if field_name not in self.editable_need_fields:
                 self.editable_need_fields[field_name] = item.field
@@ -132,7 +132,7 @@ class EditPatchView(ModelFormAdminView, ListAdminView):
     @transaction.atomic
     def post(self, request, object_id):
         model_fields = [f.name for f in self.opts.fields]
-        fields = [f for f in request.POST.keys() if f in model_fields]
+        fields = [f for f in list(request.POST.keys()) if f in model_fields]
         defaults = {
             "form": self.form,
             "fields": fields,

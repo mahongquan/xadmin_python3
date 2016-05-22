@@ -4,7 +4,7 @@ from base import BaseTest
 from xadmin.sites import AdminSite
 from xadmin.views import BaseAdminView, BaseAdminPlugin, ModelAdminView, filter_hook
 
-from models import ModelA
+from .models import ModelA
 
 
 class ModelAAdmin(object):
@@ -48,7 +48,7 @@ class AdminSiteTest(BaseTest):
 
         site.register(ModelA, ModelAAdmin)
 
-        self.assertIn(ModelA, site._registry.keys())
+        self.assertIn(ModelA, list(site._registry.keys()))
 
     def test_unregister_model(self):
         site = self.get_site()
@@ -56,7 +56,7 @@ class AdminSiteTest(BaseTest):
         site.register(ModelA, ModelAAdmin)
         site.unregister(ModelA)
 
-        self.assertNotIn(ModelA, site._registry.keys())
+        self.assertNotIn(ModelA, list(site._registry.keys()))
 
     def test_viewoption(self):
         site = self.get_site()

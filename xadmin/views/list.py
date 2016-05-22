@@ -4,7 +4,7 @@ from django.core.paginator import InvalidPage, Paginator
 from django.db import models
 from django.http import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse, TemplateResponse
-from django.utils.encoding import force_unicode, smart_unicode
+#from django.utils.encoding import force_unicode, smart_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
@@ -12,7 +12,8 @@ from django.utils.translation import ugettext as _
 
 from xadmin.util import lookup_field, display_for_field, label_for_field, boolean_icon
 
-from base import ModelAdminView, filter_hook, inclusion_tag, csrf_protect_m
+from .base import ModelAdminView, filter_hook, inclusion_tag, csrf_protect_m
+import collections
 
 # List settings
 ALL_VAR = 'all'
@@ -65,7 +66,7 @@ class ResultItem(object):
     def label(self):
         text = mark_safe(
             self.text) if self.allow_tags else conditional_escape(self.text)
-        if force_unicode(text) == '':
+        if text=='':#force_unicode(text) == '':
             text = mark_safe('&nbsp;')
         for wrap in self.wraps:
             text = mark_safe(wrap % text)
@@ -134,7 +135,7 @@ class ListAdminView(ModelAdminView):
         # Get params from request
         self.show_all = ALL_VAR in request.GET
         self.to_field = request.GET.get(TO_FIELD_VAR)
-        self.params = dict(request.GET.items())
+        self.params = dict(list(request.GET.items()))
 
         if PAGE_VAR in self.params:
             del self.params[PAGE_VAR]
@@ -193,7 +194,7 @@ class ListAdminView(ModelAdminView):
                 self.result_list = self.paginator.page(
                     self.page_num + 1).object_list
             except InvalidPage:
-                if ERROR_FLAG in self.request.GET.keys():
+                if ERROR_FLAG in list(self.request.GET.keys()):
                     return SimpleTemplateResponse('xadmin/views/invalid_setup.html', {
                         'title': _('Database error'),
                     })
@@ -268,7 +269,7 @@ class ListAdminView(ModelAdminView):
         except models.FieldDoesNotExist:
             # See whether field_name is a name of a non-field
             # that allows sorting.
-            if callable(field_name):
+            if isinstance(field_name, collections.Callable):
                 attr = field_name
             elif hasattr(self, field_name):
                 attr = getattr(self, field_name)
@@ -291,9 +292,7 @@ class ListAdminView(ModelAdminView):
         if ORDER_VAR in self.params and self.params[ORDER_VAR]:
             # Clear ordering and used params
             ordering = [pfx + self.get_ordering_field(field_name) for n, pfx, field_name in
-                        map(
-                        lambda p: p.rpartition('-'),
-                        self.params[ORDER_VAR].split('.'))
+                        [p.rpartition('-') for p in self.params[ORDER_VAR].split('.')]
                         if self.get_ordering_field(field_name)]
 
         # Ensure that the primary key is systematically present in the list of
@@ -369,12 +368,12 @@ class ListAdminView(ModelAdminView):
         """
         Prepare the context for templates.
         """
-        self.title = _('%s List') % force_unicode(self.opts.verbose_name)
+        self.title = _('%s List') % (self.opts.verbose_name)#force_unicode(self.opts.verbose_name)
         model_fields = [(f, f.name in self.list_display, self.get_check_field_url(f))
                         for f in (list(self.opts.fields) + self.get_model_method_fields()) if f.name not in self.list_exclude]
 
         new_context = {
-            'model_name': force_unicode(self.opts.verbose_name_plural),
+            'model_name': self.opts.verbose_name_plural,#force_unicode(self.opts.verbose_name_plural),
             'title': self.title,
             'cl': self,
             'model_fields': model_fields,
@@ -428,11 +427,11 @@ class ListAdminView(ModelAdminView):
     @filter_hook
     def get_page_number(self, i):
         if i == DOT:
-            return mark_safe(u'<span class="dot-page">...</span> ')
+            return mark_safe('<span class="dot-page">...</span> ')
         elif i == self.page_num:
-            return mark_safe(u'<span class="this-page">%d</span> ' % (i + 1))
+            return mark_safe('<span class="this-page">%d</span> ' % (i + 1))
         else:
-            return mark_safe(u'<a href="%s"%s>%d</a> ' % (escape(self.get_query_string({PAGE_VAR: i})), (i == self.paginator.num_pages - 1 and ' class="end"' or ''), i + 1))
+            return mark_safe('<a href="%s"%s>%d</a> ' % (escape(self.get_query_string({PAGE_VAR: i})), (i == self.paginator.num_pages - 1 and ' class="end"' or ''), i + 1))
 
     # Result List methods
     @filter_hook
@@ -458,7 +457,7 @@ class ListAdminView(ModelAdminView):
         if field_name in ordering_field_columns:
             sorted = True
             order_type = ordering_field_columns.get(field_name).lower()
-            sort_priority = ordering_field_columns.keys().index(field_name) + 1
+            sort_priority = list(ordering_field_columns.keys()).index(field_name) + 1
             th_classes.append('sorted %sending' % order_type)
             new_order_type = {'asc': 'desc', 'desc': 'asc'}[order_type]
 
@@ -469,7 +468,7 @@ class ListAdminView(ModelAdminView):
         o_list_toggle = []  # URL for toggling order type for this field
         make_qs_param = lambda t, n: ('-' if t == 'desc' else '') + str(n)
 
-        for j, ot in ordering_field_columns.items():
+        for j, ot in list(ordering_field_columns.items()):
             if j == field_name:  # Same column
                 param = make_qs_param(new_order_type, j)
                 # We want clicking on this header to bring the ordering to the
@@ -495,12 +494,12 @@ class ListAdminView(ModelAdminView):
         item.sort_priority = sort_priority
 
         menus = [
-            ('asc', o_list_asc, 'caret-up', _(u'Sort ASC')),
-            ('desc', o_list_desc, 'caret-down', _(u'Sort DESC')),
+            ('asc', o_list_asc, 'caret-up', _('Sort ASC')),
+            ('desc', o_list_desc, 'caret-down', _('Sort DESC')),
         ]
         if sorted:
             row['num_sorted_fields'] = row['num_sorted_fields'] + 1
-            menus.append((None, o_list_remove, 'times', _(u'Cancel Sort')))
+            menus.append((None, o_list_remove, 'times', _('Cancel Sort')))
             item.btns.append('<a class="toggle" href="%s"><i class="fa fa-%s"></i></a>' % (
                 self.get_query_string({ORDER_VAR: '.'.join(o_list_toggle)}), 'sort-up' if order_type == "asc" else 'sort-down'))
 
@@ -542,7 +541,7 @@ class ListAdminView(ModelAdminView):
                     item.allow_tags = True
                     item.text = boolean_icon(value)
                 else:
-                    item.text = smart_unicode(value)
+                    item.text = value#smart_unicode(value)
             else:
                 if isinstance(f.rel, models.ManyToOneRel):
                     field_val = getattr(obj, f.name)
@@ -574,10 +573,10 @@ class ListAdminView(ModelAdminView):
                     else:
                         edit_url = ""
                     item.wraps.append('<a data-res-uri="%s" data-edit-uri="%s" class="details-handler" rel="tooltip" title="%s">%%s</a>'
-                                     % (item_res_uri, edit_url, _(u'Details of %s') % str(obj)))
+                                     % (item_res_uri, edit_url, _('Details of %s') % str(obj)))
             else:
                 url = self.url_for_result(obj)
-                item.wraps.append(u'<a href="%s">%%s</a>' % url)
+                item.wraps.append('<a href="%s">%%s</a>' % url)
 
         return item
 
@@ -628,34 +627,34 @@ class ListAdminView(ModelAdminView):
             # If there are 10 or fewer pages, display links to every page.
             # Otherwise, do some fancy
             if paginator.num_pages <= 10:
-                page_range = range(paginator.num_pages)
+                page_range = list(range(paginator.num_pages))
             else:
                 # Insert "smart" pagination links, so that there are always ON_ENDS
                 # links at either end of the list of pages, and there are always
                 # ON_EACH_SIDE links at either end of the "current page" link.
                 page_range = []
                 if page_num > (ON_EACH_SIDE + ON_ENDS):
-                    page_range.extend(range(0, ON_EACH_SIDE - 1))
+                    page_range.extend(list(range(0, ON_EACH_SIDE - 1)))
                     page_range.append(DOT)
                     page_range.extend(
-                        range(page_num - ON_EACH_SIDE, page_num + 1))
+                        list(range(page_num - ON_EACH_SIDE, page_num + 1)))
                 else:
-                    page_range.extend(range(0, page_num + 1))
+                    page_range.extend(list(range(0, page_num + 1)))
                 if page_num < (paginator.num_pages - ON_EACH_SIDE - ON_ENDS - 1):
                     page_range.extend(
-                        range(page_num + 1, page_num + ON_EACH_SIDE + 1))
+                        list(range(page_num + 1, page_num + ON_EACH_SIDE + 1)))
                     page_range.append(DOT)
-                    page_range.extend(range(
-                        paginator.num_pages - ON_ENDS, paginator.num_pages))
+                    page_range.extend(list(range(
+                        paginator.num_pages - ON_ENDS, paginator.num_pages)))
                 else:
-                    page_range.extend(range(page_num + 1, paginator.num_pages))
+                    page_range.extend(list(range(page_num + 1, paginator.num_pages)))
 
         need_show_all_link = self.can_show_all and not self.show_all and self.multi_page
         return {
             'cl': self,
             'pagination_required': pagination_required,
             'show_all_url': need_show_all_link and self.get_query_string({ALL_VAR: ''}),
-            'page_range': map(self.get_page_number, page_range),
+            'page_range': list(map(self.get_page_number, page_range)),
             'ALL_VAR': ALL_VAR,
             '1': 1,
         }

@@ -23,7 +23,7 @@ class TopNavPlugin(BaseAdminPlugin):
 
         site_name = self.admin_site.name
         if self.global_search_models == None:
-            models = self.admin_site._registry.keys()
+            models = list(self.admin_site._registry.keys())
         else:
             models = self.global_search_models
 
@@ -49,7 +49,7 @@ class TopNavPlugin(BaseAdminPlugin):
         site_name = self.admin_site.name
 
         if self.global_add_models == None:
-            models = self.admin_site._registry.keys()
+            models = list(self.admin_site._registry.keys())
         else:
             models = self.global_add_models
         for model in models:

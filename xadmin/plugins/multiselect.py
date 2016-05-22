@@ -6,7 +6,7 @@ from django import forms
 from django.db.models import ManyToManyField
 from django.forms.utils import flatatt
 from django.template import loader
-from django.utils.encoding import force_unicode
+#from django.utils.encoding import force_unicode
 from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from xadmin.util import vendor
@@ -25,9 +25,10 @@ class SelectMultipleTransfer(forms.SelectMultiple):
         super(SelectMultipleTransfer, self).__init__(attrs, choices)
 
     def render_opt(self, selected_choices, option_value, option_label):
-        option_value = force_unicode(option_value)
-        return u'<option value="%s">%s</option>' % (
-            escape(option_value), conditional_escape(force_unicode(option_label))), bool(option_value in selected_choices)
+        #option_value = force_unicode(option_value)
+        return '<option value="%s">%s</option>' % (
+            #escape(option_value), conditional_escape(force_unicode(option_label))), bool(option_value in selected_choices)
+            escape(option_value), conditional_escape(option_label)), bool(option_value in selected_choices)
 
     def render(self, name, value, attrs=None, choices=()):
         if attrs is None:
@@ -45,7 +46,7 @@ class SelectMultipleTransfer(forms.SelectMultiple):
 
         for option_value, option_label in chain(self.choices, choices):
             if isinstance(option_label, (list, tuple)):
-                available_output.append(u'<optgroup label="%s">' %
+                available_output.append('<optgroup label="%s">' %
                                         escape(force_unicode(option_value)))
                 for option in option_label:
                     output, selected = self.render_opt(
@@ -54,7 +55,7 @@ class SelectMultipleTransfer(forms.SelectMultiple):
                         chosen_output.append(output)
                     else:
                         available_output.append(output)
-                available_output.append(u'</optgroup>')
+                available_output.append('</optgroup>')
             else:
                 output, selected = self.render_opt(
                     selected_choices, option_value, option_label)
@@ -68,8 +69,8 @@ class SelectMultipleTransfer(forms.SelectMultiple):
             'attrs': attrs,
             'field_id': attrs['id'],
             'flatatts': flatatt(final_attrs),
-            'available_options': u'\n'.join(available_output),
-            'chosen_options': u'\n'.join(chosen_output),
+            'available_options': '\n'.join(available_output),
+            'chosen_options': '\n'.join(chosen_output),
         }
         return mark_safe(loader.render_to_string('xadmin/forms/transfer.html', context))
 
@@ -92,8 +93,8 @@ class M2MSelectPlugin(BaseAdminPlugin):
     def init_request(self, *args, **kwargs):
         return hasattr(self.admin_view, 'style_fields') and \
             (
-                'm2m_transfer' in self.admin_view.style_fields.values() or
-                'm2m_dropdown' in self.admin_view.style_fields.values()
+                'm2m_transfer' in list(self.admin_view.style_fields.values()) or
+                'm2m_dropdown' in list(self.admin_view.style_fields.values())
             )
 
     def get_field_style(self, attrs, db_field, style, **kwargs):

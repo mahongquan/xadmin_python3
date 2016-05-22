@@ -7,7 +7,7 @@ from django.db import models, transaction
 from django.forms.models import modelform_factory, modelform_defines_fields
 from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.utils.encoding import force_unicode
+#from django.utils.encoding import force_unicode
 from django.utils.html import escape
 from django.template import loader
 from django.utils.translation import ugettext as _
@@ -16,7 +16,7 @@ from xadmin.layout import FormHelper, Layout, Fieldset, TabHolder, Container, Co
 from xadmin.util import unquote
 from xadmin.views.detail import DetailAdminUtil
 
-from base import ModelAdminView, filter_hook, csrf_protect_m
+from .base import ModelAdminView, filter_hook, csrf_protect_m
 
 
 FORMFIELD_FOR_DBFIELD_DEFAULTS = {
@@ -188,7 +188,7 @@ class ModelFormAdminView(ModelAdminView):
     @filter_hook
     def get_form_layout(self):
         layout = copy.deepcopy(self.form_layout)
-        fields = self.form_obj.fields.keys() + list(self.get_readonly_fields())
+        fields = list(self.form_obj.fields.keys()) + list(self.get_readonly_fields())
 
         if layout is None:
             layout = Layout(Container(Col('full',
@@ -206,7 +206,7 @@ class ModelFormAdminView(ModelAdminView):
 
             rendered_fields = [i[1] for i in layout.get_field_names()]
             container = layout[0].fields
-            other_fieldset = Fieldset(_(u'Other Fields'), *[f for f in fields if f not in rendered_fields])
+            other_fieldset = Fieldset(_('Other Fields'), *[f for f in fields if f not in rendered_fields])
 
             if len(other_fieldset.fields):
                 if len(container) and isinstance(container[0], Column):
@@ -271,7 +271,7 @@ class ModelFormAdminView(ModelAdminView):
             self.save_models()
             self.save_related()
             response = self.post_response()
-            if isinstance(response, basestring):
+            if isinstance(response, str):
                 return HttpResponseRedirect(response)
             else:
                 return response
@@ -328,7 +328,7 @@ class ModelFormAdminView(ModelAdminView):
     def get_error_list(self):
         errors = forms.utils.ErrorList()
         if self.form_obj.is_bound:
-            errors.extend(self.form_obj.errors.values())
+            errors.extend(list(self.form_obj.errors.values()))
         return errors
 
     @filter_hook
@@ -353,7 +353,7 @@ class CreateAdminView(ModelFormAdminView):
         # Prepare the dict of initial data from the request.
         # We have to special-case M2Ms as a list of comma-separated PKs.
         if self.request_method == 'get':
-            initial = dict(self.request.GET.items())
+            initial = dict(list(self.request.GET.items()))
             for k in initial:
                 try:
                     f = self.opts.get_field(k)
@@ -368,7 +368,7 @@ class CreateAdminView(ModelFormAdminView):
     @filter_hook
     def get_context(self):
         new_context = {
-            'title': _('Add %s') % force_unicode(self.opts.verbose_name),
+            'title': _('Add %s') % self.opts.verbose_name#force_unicode(self.opts.verbose_name),
         }
         context = super(CreateAdminView, self).get_context()
         context.update(new_context)
@@ -377,7 +377,7 @@ class CreateAdminView(ModelFormAdminView):
     @filter_hook
     def get_breadcrumb(self):
         bcs = super(ModelFormAdminView, self).get_breadcrumb()
-        item = {'title': _('Add %s') % force_unicode(self.opts.verbose_name)}
+        item = {'title': _('Add %s') % self.opts.verbose_name}#force_unicode(self.opts.verbose_name)}
         if self.has_add_permission():
             item['url'] = self.model_admin_url('add')
         bcs.append(item)

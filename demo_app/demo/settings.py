@@ -2,9 +2,10 @@
 
 import sys
 import os.path
+import imp
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
+imp.reload(sys)
+#sys.setdefaultencoding('utf-8')
 gettext = lambda s: s
 
 PROJECT_ROOT = os.path.join(

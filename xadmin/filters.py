@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.encoding import smart_unicode
+#from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.template.loader import get_template
@@ -17,7 +17,7 @@ import datetime
 FILTER_PREFIX = '_p_'
 SEARCH_VAR = '_q_'
 
-from util import (get_model_from_relation,
+from .util import (get_model_from_relation,
     reverse_field_path, get_limit_choices_to_from_path, prepare_lookup_value)
 
 
@@ -46,7 +46,7 @@ class BaseFilter(object):
 
     def form_params(self):
         return self.admin_view.get_form_params(
-            remove=map(lambda k: FILTER_PREFIX + k, self.used_params.keys()))
+            remove=[FILTER_PREFIX + k for k in list(self.used_params.keys())])
 
     def has_output(self):
         """
@@ -110,7 +110,7 @@ class FieldFilter(BaseFilter):
 
         super(FieldFilter, self).__init__(request, params, model, admin_view)
 
-        for name, format in self.lookup_formats.items():
+        for name, format in list(self.lookup_formats.items()):
             p = format % field_path
             self.context_params["%s_name" % name] = FILTER_PREFIX + p
             if p in params:
@@ -120,14 +120,14 @@ class FieldFilter(BaseFilter):
             else:
                 self.context_params["%s_val" % name] = ''
 
-        map(lambda kv: setattr(
-            self, 'lookup_' + kv[0], kv[1]), self.context_params.items())
+        list(map(lambda kv: setattr(
+            self, 'lookup_' + kv[0], kv[1]), list(self.context_params.items())))
 
     def get_context(self):
         context = super(FieldFilter, self).get_context()
         context.update(self.context_params)
         context['remove_url'] = self.query_string(
-            {}, map(lambda k: FILTER_PREFIX + k, self.used_params.keys()))
+            {}, [FILTER_PREFIX + k for k in list(self.used_params.keys())])
         return context
 
     def has_output(self):
@@ -192,7 +192,7 @@ class ChoicesFieldListFilter(ListFieldFilter):
         }
         for lookup, title in self.field.flatchoices:
             yield {
-                'selected': smart_unicode(lookup) == self.lookup_exact_val,
+                'selected': lookup == self.lookup_exact_val,#smart_unicode(lookup) == self.lookup_exact_val,
                 'query_string': self.query_string({self.lookup_exact_name: lookup}),
                 'display': title,
             }
@@ -241,7 +241,7 @@ class DateFieldListFilter(ListFieldFilter):
 
     def __init__(self, field, request, params, model, admin_view, field_path):
         self.field_generic = '%s__' % field_path
-        self.date_params = dict([(FILTER_PREFIX + k, v) for k, v in params.items()
+        self.date_params = dict([(FILTER_PREFIX + k, v) for k, v in list(params.items())
                                  if k.startswith(self.field_generic)])
 
         super(DateFieldListFilter, self).__init__(

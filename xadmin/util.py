@@ -8,7 +8,7 @@ from django.utils import formats
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.text import capfirst
-from django.utils.encoding import force_unicode, smart_unicode, smart_str
+#from django.utils.encoding import force_unicode, smart_unicode, smart_str
 from django.utils.translation import ungettext
 from django.core.urlresolvers import reverse
 from django.conf import settings
@@ -17,6 +17,7 @@ from django.utils.translation import get_language
 from django.contrib.admin.utils import label_for_field,help_text_for_field
 import datetime
 import decimal
+import collections
 
 if 'django.contrib.staticfiles' in settings.INSTALLED_APPS:
     from django.contrib.staticfiles.templatetags.staticfiles import static
@@ -43,7 +44,7 @@ except Exception:
 
 
 def xstatic(*tags):
-    from vendors import vendors
+    from .vendors import vendors
     node = vendors
 
     fs = []
@@ -53,7 +54,7 @@ def xstatic(*tags):
         try:
             for p in tag.split('.'):
                 node = node[p]
-        except Exception, e:
+        except Exception as e:
             if tag.startswith('xadmin'):
                 file_type = tag.split('.')[-1]
                 if file_type in ('css', 'js'):
@@ -63,7 +64,7 @@ def xstatic(*tags):
             else:
                 raise e
 
-        if type(node) in (str, unicode):
+        if type(node) in (str, str):
             files = node
         else:
             mode = 'dev'
@@ -132,7 +133,7 @@ def quote(s):
     quoting is slightly different so that it doesn't get automatically
     unquoted by the Web browser.
     """
-    if not isinstance(s, basestring):
+    if not isinstance(s, str):
         return s
     res = list(s)
     for i in range(len(res)):
@@ -146,7 +147,7 @@ def unquote(s):
     """
     Undo the effects of quote(). Based heavily on urllib.unquote().
     """
-    if not isinstance(s, basestring):
+    if not isinstance(s, str):
         return s
     mychr = chr
     myatoi = int
@@ -195,7 +196,7 @@ class NestedObjects(Collector):
                 self.add_edge(None, obj)
         try:
             return super(NestedObjects, self).collect(objs, source_attr=source_attr, **kwargs)
-        except models.ProtectedError, e:
+        except models.ProtectedError as e:
             self.protected.update(e.protected_objects)
 
     def related_objects(self, related, objs):
@@ -244,8 +245,8 @@ def model_format_dict(obj):
     else:
         opts = obj
     return {
-        'verbose_name': force_unicode(opts.verbose_name),
-        'verbose_name_plural': force_unicode(opts.verbose_name_plural)
+        'verbose_name': opts.verbose_name,#force_unicode(opts.verbose_name),
+        'verbose_name_plural':opts.verbose_name_plural# force_unicode(opts.verbose_name_plural)
     }
 
 
@@ -281,7 +282,7 @@ def lookup_field(name, obj, model_admin=None):
     except models.FieldDoesNotExist:
         # For non-field values, the value is either a method, property or
         # returned via a callable.
-        if callable(name):
+        if isinstance(name, collections.Callable):
             attr = name
             value = attr(obj)
         elif (model_admin is not None and hasattr(model_admin, name) and
@@ -296,7 +297,7 @@ def lookup_field(name, obj, model_admin=None):
                 if rel_obj is not None:
                     return lookup_field(sub_rel_name,rel_obj,model_admin)
             attr = getattr(obj, name)
-            if callable(attr):
+            if isinstance(attr, collections.Callable):
                 value = attr()
             else:
                 value = attr
@@ -313,7 +314,7 @@ def admin_urlname(value, arg):
 
 
 def boolean_icon(field_val):
-    return mark_safe(u'<i class="%s" alt="%s"></i>' % (
+    return mark_safe('<i class="%s" alt="%s"></i>' % (
         {True: 'fa fa-check-circle text-success', False: 'fa fa-times-circle text-error', None: 'fa fa-question-circle muted'}[field_val], field_val))
 
 
@@ -339,7 +340,7 @@ def display_for_field(value, field):
     elif isinstance(field.rel, models.ManyToManyRel):
         return ', '.join([smart_unicode(obj) for obj in value.all()])
     else:
-        return smart_unicode(value)
+        return value#smart_unicode(value)
 
 
 def display_for_value(value, boolean=False):

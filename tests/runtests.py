@@ -89,7 +89,7 @@ def setup(verbosity, test_labels):
         # this module and add it to the list to test.
         if not test_labels or module_name in test_labels_set:
             if verbosity >= 2:
-                print("Importing application %s" % module_name)
+                print(("Importing application %s" % module_name))
             if module_label not in settings.INSTALLED_APPS:
                 settings.INSTALLED_APPS.append(module_label)
 
@@ -103,9 +103,9 @@ def teardown(state):
     # so that it will successfully remove temp trees containing
     # non-ASCII filenames on Windows. (We're assuming the temp dir
     # name itself does not contain non-ASCII characters.)
-    shutil.rmtree(unicode(TEMP_DIR))
+    shutil.rmtree(str(TEMP_DIR))
     # Restore the old settings.
-    for key, value in state.items():
+    for key, value in list(state.items()):
         setattr(settings, key, value)
 
 def django_tests(verbosity, interactive, failfast, test_labels):
